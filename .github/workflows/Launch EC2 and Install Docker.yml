@@ -22,7 +22,7 @@ jobs:
             --count 1 \
             --instance-type t2.micro \
             --key-name samproject \
-            --security-groups sg-0871a6eed28951b73
+            --security-group-ids sg-0871a6eed28951b73
 
       - name: SSH into EC2 and install Docker
         run: |
