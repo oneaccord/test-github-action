@@ -21,7 +21,7 @@ jobs:
             --image-id ami-0c02fb55956c7d316 \
             --count 1 \
             --instance-type t2.micro \
-            --key-name github \
+            --key-name samproject \
             --security-group-ids sg-0871a6eed28951b73 \
             --subnet-id subnet-af6e6582 \
             --query "Instances[0].InstanceId" \
@@ -46,6 +46,14 @@ jobs:
            done
           echo "SSH not available after 5 minutes" && exit 1	    	  
 		  
+      - name: Debug key fingerprint
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
+          chmod 400 key.pem
+          ssh-keygen -lf key.pem
+         
+           	  
+
 
       - name: SSH into EC2 and install Docker
         run: |
