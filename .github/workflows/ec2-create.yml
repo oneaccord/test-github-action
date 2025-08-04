@@ -21,7 +21,7 @@ jobs:
             --image-id ami-0c02fb55956c7d316 \
             --count 1 \
             --instance-type t2.micro \
-            --key-name samproject \
+            --key-name github \
             --security-group-ids sg-0871a6eed28951b73 \
             --subnet-id subnet-af6e6582 \
             --query "Instances[0].InstanceId" \
