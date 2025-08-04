@@ -1,9 +1,0 @@
-name: Launch EC2 and Install Docker
-on: workflow_dispatch  # manual trigger
-jobs:
-  launch-ec2:
-    runs-on: ubuntu-latest
-    steps:
-      - Configure AWS
-      - Launch EC2
-      - SSH and install Docker
