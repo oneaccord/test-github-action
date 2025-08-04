@@ -36,6 +36,16 @@ jobs:
             --query "Reservations[0].Instances[0].PublicIpAddress" \
             --output text)
           echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
+		  
+      - name: Wait for SSH to become available
+        run: |
+          for i in {1..30}; do
+            echo "Checking SSH access to ${{ env.PUBLIC_IP }}..."
+            nc -z -w5 ${{ env.PUBLIC_IP }} 22 && echo "SSH is ready!" && exit 0
+            sleep 10
+           done
+          echo "SSH not available after 5 minutes" && exit 1	    	  
+		  
 
       - name: SSH into EC2 and install Docker
         run: |
