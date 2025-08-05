@@ -5,7 +5,7 @@ on:
 
 jobs:
   launch-ec2:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -17,7 +17,7 @@ jobs:
       - name: Launch EC2 instance
         run: |
           INSTANCE_ID=$(aws ec2 run-instances \
-            --image-id ami-0c02fb55956c7d316 \
+            --image-id ami-020cba7c55df1f615 \
             --count 1 \
             --instance-type t2.micro \
             --key-name samproject \
