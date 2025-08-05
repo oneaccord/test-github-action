@@ -1,0 +1,65 @@
+name: Launch Amazon Linux EC2 and Install Docker
+
+on:
+  workflow_dispatch:
+
+jobs:
+  launch-and-setup-ec2:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1  # adjust as needed
+
+      - name: Launch EC2 instance
+        id: launch
+        run: |
+          INSTANCE_ID=$(aws ec2 run-instances \
+            --image-id ami-0c02fb55956c7d316 \  
+            --count 1 \
+            --instance-type t2.micro \
+            --key-name samproject \
+            --security-group-ids sg-0871a6eed28951b73 \
+            --subnet-id subnet-af6e6582 \
+            --query "Instances[0].InstanceId" \
+            --output text)
+          
+          echo "INSTANCE_ID=$INSTANCE_ID" >> $GITHUB_ENV
+
+      - name: Wait for instance and get public IP
+        run: |
+          aws ec2 wait instance-running --instance-ids ${{ env.INSTANCE_ID }}
+
+          PUBLIC_IP=$(aws ec2 describe-instances \
+            --instance-ids ${{ env.INSTANCE_ID }} \
+            --query "Reservations[0].Instances[0].PublicIpAddress" \
+            --output text)
+
+          echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
+
+      - name: Wait for SSH port to be open
+        run: |
+          echo "Waiting for SSH to become available at ${{ env.PUBLIC_IP }}"
+          for i in {1..30}; do
+            nc -z -w5 ${{ env.PUBLIC_IP }} 22 && echo "SSH is ready!" && exit 0
+            echo "SSH not ready yet... retrying in 10s"
+            sleep 10
+          done
+          echo "Timeout waiting for SSH" && exit 1
+
+      - name: SSH into EC2 and install Docker
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
+          chmod 400 key.pem
+
+          ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@${{ env.PUBLIC_IP }} << 'EOF'
+            sudo yum update -y
+            sudo yum install -y docker
+            sudo systemctl start docker
+            sudo usermod -aG docker ec2-user
+            docker --version
+          EOF
